@@ -1,42 +1,49 @@
-import { useEffect, useRef, useState } from "react";
-import { useFetchData } from "../api";
-import DataList from "./DataList";
+import { useRef, useEffect } from "react";
+import { HandRecognition } from "./HandRecognition";
+import {
+  FetchNextPageOptions,
+  InfiniteData,
+  InfiniteQueryObserverResult,
+} from "@tanstack/react-query";
 
-/* interface Data {
-  hits: { userImageURL: string }[];
-} */
+type InfinityScrollProps = {
+  children: JSX.Element[] | JSX.Element | undefined;
+  loadMore: (
+    options?: FetchNextPageOptions | undefined
+  ) => Promise<
+    InfiniteQueryObserverResult<InfiniteData<unknown, unknown>, Error>
+  >;
+  scrollBehavior?: "auto" | "smooth" | "instant";
+  isLoading: boolean;
+  isError: boolean;
+  loader?: string | JSX.Element;
+  error?: string | JSX.Element;
+  scrollThreshold?: number | number[];
+  scrollBy?: number;
+  style?: React.CSSProperties;
+};
 
-/* interface Data {
-  title: string;
-} */
+export function InfinityScroll({
+  children,
+  loadMore,
+  isLoading,
+  scrollBehavior = "auto",
+  scrollThreshold = 0,
+  scrollBy = 100,
+  style,
+}: InfinityScrollProps) {
+  const triggerRef = useRef<HTMLDivElement>(null);
 
-interface Data {
-  hits: {
-    userImageURL: string;
-    user: string;
-  }[];
-}
-
-export default function InfinityScroll() {
-  const [perPage, setPerPage] = useState(10);
-  const triggerRef = useRef(null);
-  const { isLoading, error, data, refetch } = useFetchData<Data>(
-    `https://pixabay.com/api/?key=43104659-01e34685995cc478761143a07&image_type=photo&q=nature&per_page=${perPage}&page=1`
-  );
-  /*   const { isLoading, error, data, refetch } = useFetchData<Data[]>(
-    `https://jsonplaceholder.typicode.com/todos?_limit=${perPage}`
-  );
- */
   useEffect(() => {
     if (!triggerRef.current) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !isLoading) {
-          setPerPage((prev) => prev + 5);
+          void loadMore();
         }
       },
-      { threshold: 0 }
+      { threshold: scrollThreshold }
     );
 
     const ref = triggerRef.current;
@@ -45,45 +52,33 @@ export default function InfinityScroll() {
     return () => {
       observer.unobserve(ref);
     };
-  }, [isLoading]);
+  }, [isLoading, loadMore, scrollThreshold]);
 
-  useEffect(() => {
-    async function refetchData() {
-      await refetch();
+  const onScroll = (isScrollDown: boolean) => {
+    if (isScrollDown) {
+      window.scrollBy({
+        top: scrollBy,
+        left: 0,
+        behavior: scrollBehavior,
+      });
+    } else {
+      window.scrollBy({
+        top: -scrollBy,
+        left: 0,
+        behavior: scrollBehavior,
+      });
     }
-    refetchData().catch(() => {
-      console.log("Happen some error!");
-    });
-  }, [perPage, refetch]);
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>An error occurred error!</div>;
+  };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        rowGap: "10px",
-      }}
-    >
-      <DataList
-        /*         items={data?.hits?.map((item)=>({
-          url: item?.userImageURL,
-        }))}
-        */
-        /*         items={data?.map((item) => ({
-          text: item.title,
-        }))} */
-
-        items={data?.hits?.map((item) => ({
-          url: item?.userImageURL,
-          text: item?.user,
-        }))}
-      />
-      <div id="trigger" ref={triggerRef} style={{ height: "10px" }}></div>
+    <div className="container">
+      <div className="video">
+        <HandRecognition onScroll={onScroll} />
+      </div>
+      <div style={style}>
+        {children}
+        <div id="trigger" ref={triggerRef} style={{ height: "10px" }}></div>
+      </div>
     </div>
   );
 }

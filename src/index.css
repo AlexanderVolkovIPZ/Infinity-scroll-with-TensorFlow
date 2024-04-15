@@ -67,3 +67,30 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.container {
+  position: relative;
+}
+
+.video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 640;
+  height: 480;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+img {
+  width: 200px;
+  height: 200px;
+}
+
+.btn{
+  position: fixed;
+  top: 0;
+  right: 0;
+}
