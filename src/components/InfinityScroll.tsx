@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { HandRecognition } from "./HandRecognition";
+import { HandRecognitionComponent } from "./HandRecognition2";
 import {
   FetchNextPageOptions,
   InfiniteData,
@@ -73,7 +73,7 @@ export function InfinityScroll({
   return (
     <div className="container">
       <div className="video">
-        <HandRecognition onScroll={onScroll} />
+        <HandRecognitionComponent onScroll={onScroll} />
       </div>
       <div style={style}>
         {children}
